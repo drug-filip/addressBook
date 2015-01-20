@@ -1,0 +1,43 @@
+<?xml version="1.0"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+        targetNamespace="http://filipovic.com/ws/soap/management/user/entity"
+        xmlns:base="http://filipovic.com/ws/soap"
+        xmlns:user="http://filipovic.com/ws/soap/management/user/entity">
+    
+    
+    <xs:import schemaLocation="base.xsd" namespace="http://filipovic.com/ws/soap" />
+    
+    <xs:element name="CreateUserRequest">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="username" type="xs:string" minOccurs="1"/>
+                <xs:element name="password" type="xs:string" minOccurs="1"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="CreateUserResponse">
+        <xs:complexType>
+            <xs:complexContent>
+                <xs:extension base="base:Response"/>  
+            </xs:complexContent>
+        </xs:complexType>
+    </xs:element>
+    
+     <xs:element name="LoginRequest">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="username" type="xs:string" minOccurs="1"/>
+                <xs:element name="password" type="xs:string" minOccurs="1"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="LoginResponse">
+        <xs:complexType>
+            <xs:complexContent>
+                <xs:extension base="base:Response"/>  
+            </xs:complexContent>
+        </xs:complexType>
+    </xs:element>
+
+
+</xs:schema>

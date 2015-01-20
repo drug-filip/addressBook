@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<catalog xmlns="urn:oasis:names:tc:entity:xmlns:xml:catalog" prefer="system">
+    <system systemId="file:/C:/Users/Vladimir/Documents/NetBeansProjects/AddressBook/wsdl/ContactManagementService.wsdl" uri="src/conf/xml-resources/web-services/ContactManagementService/wsdl/ContactManagementService.wsdl"/>
+    <system systemId="file:/C:/Users/Vladimir/Documents/NetBeansProjects/AddressBook/wsdl/ContactManagement.xsd" uri="src/conf/xml-resources/web-services/ContactManagementService/wsdl/ContactManagement.xsd"/>
+    <system systemId="file:/C:/Users/Vladimir/Documents/NetBeansProjects/AddressBook/wsdl/UserManagementService.wsdl" uri="src/conf/xml-resources/web-services/UserManagementService/wsdl/UserManagementService.wsdl"/>
+    <system systemId="file:/C:/Users/Vladimir/Documents/NetBeansProjects/AddressBook/wsdl/UserManagement.xsd" uri="src/conf/xml-resources/web-services/UserManagementService/wsdl/UserManagement.xsd"/>
+    <system systemId="file:/C:/Users/Vladimir/Documents/NetBeansProjects/AddressBook/wsdl/base.xsd" uri="src/conf/xml-resources/web-services/UserManagementService/wsdl/base.xsd"/>
+</catalog>

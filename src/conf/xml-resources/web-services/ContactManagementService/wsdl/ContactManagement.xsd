@@ -1,0 +1,117 @@
+<?xml version="1.0"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+        targetNamespace="http://filipovic.com/ws/soap/management/contact/entity"
+        xmlns:base="http://filipovic.com/ws/soap"
+        xmlns:contact="http://filipovic.com/ws/soap/management/contact/entity">
+        
+    <xs:import namespace="http://filipovic.com/ws/soap" schemaLocation="base.xsd"/>
+    
+    <xs:complexType name="ContactItem">
+        <xs:sequence>
+            <xs:element name="itemId" type="xs:int"/>
+            <xs:element name="contactId" type="xs:int"/>
+            <xs:element name="type" type="xs:string"/>
+            <xs:element name="itemValue" type="xs:string"/>
+            <xs:element name="description" type="xs:string"/>
+        </xs:sequence>
+    </xs:complexType>
+    
+    <xs:complexType name="Contact">
+        <xs:sequence>
+            <xs:element name="contactId" type="xs:int"/>
+            <xs:element name="userId" type="xs:int" minOccurs="1"/>
+            <xs:element name="firstName" type="xs:string" minOccurs="1"/>
+            <xs:element name="lastName" type="xs:string"/>
+            <xs:element name="address" type="xs:string"/>
+            <xs:element name="city" type="xs:string"/>
+            <xs:element name="description" type="xs:string"/>
+            <xs:element name="picturePath" type="xs:string"/>
+            <xs:element name="contactItemsAsString" type="xs:string"/>
+            <xs:element name="contactItems" maxOccurs="unbounded">
+                <xs:complexType>
+                    <xs:complexContent>
+                        <xs:extension base="contact:ContactItem"/>
+                    </xs:complexContent>
+                </xs:complexType>
+            </xs:element>
+        </xs:sequence>
+    </xs:complexType>
+    
+   
+    <xs:element name="CreateContactRequest">
+        <xs:complexType>
+            <xs:complexContent>
+                <xs:extension base="contact:Contact"/>
+            </xs:complexContent>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="CreateContactResponse">
+        <xs:complexType>
+            <xs:complexContent>
+                <xs:extension base="base:Response"/>
+            </xs:complexContent>
+        </xs:complexType>
+    </xs:element>
+    
+    <xs:element name="ReadContactRequest">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="contactId" type="xs:int"/>
+                <xs:element name="user_id" type="xs:int"/>
+                <xs:element name="pageNuber" type="xs:int"/>
+                <xs:element name="recordsPerPage" type="xs:int"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="ReadContactResponse">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="contacts" type="contact:Contact" maxOccurs="unbounded"/>
+                <xs:element name="error" type="base:Response"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    
+    <xs:element name="EditContactRequest">
+        <xs:complexType>
+            <xs:complexContent>
+                <xs:extension base="contact:Contact"/>
+            </xs:complexContent>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="EditContactResponse">
+        <xs:complexType>
+            <xs:complexContent>
+                <xs:extension base="base:Response"/>
+            </xs:complexContent>
+        </xs:complexType>
+    </xs:element>
+    
+    <xs:element name="DeleteContactRequest">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="contactId" type="xs:string"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    <xs:element name="DeleteContactResponse">
+        <xs:complexType>
+            <xs:complexContent>
+                <xs:extension base="base:Response"/>
+            </xs:complexContent>
+        </xs:complexType>
+    </xs:element>
+    
+    <xs:element name="GetItemTypesRequest"/>
+    <xs:element name="GetItemTypesResponse">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="itemType" type="xs:string" maxOccurs="unbounded"/>
+                <xs:element name="error" type="base:Response"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+    
+    
+    
+</xs:schema>

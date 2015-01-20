@@ -1,0 +1,123 @@
+<?xml version="1.0"?>
+<wsdl:definitions xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
+                  xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
+                  xmlns:contact="http://filipovic.com/ws/soap/management/contact/entity"
+                  xmlns:tns="http://filipovic.com/ws/soap/management/contact"
+                  targetNamespace="http://filipovic.com/ws/soap/management/contact">
+
+    <wsdl:types>
+         <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+            <xsd:import namespace="http://filipovic.com/ws/soap/management/contact/entity" schemaLocation="ContactManagement.xsd"/>
+        </xsd:schema>
+    </wsdl:types>
+
+    <wsdl:message name="CreateContactRequest">
+        <wsdl:part element="contact:CreateContactRequest" name="CreateContactRequest"/>
+    </wsdl:message>
+    <wsdl:message name="CreateContactResponse">
+        <wsdl:part element="contact:CreateContactResponse" name="CreateContactResponse"/>
+    </wsdl:message>
+    <wsdl:message name="ReadContactRequest">
+        <wsdl:part element="contact:ReadContactRequest" name="ReadContactRequest"/>
+    </wsdl:message>
+    <wsdl:message name="ReadContactResponse">
+        <wsdl:part element="contact:ReadContactResponse" name="ReadContactResponse"/>
+    </wsdl:message>
+    <wsdl:message name="EditContactRequest">
+        <wsdl:part element="contact:EditContactRequest" name="EditContactRequest"/>
+    </wsdl:message>
+    <wsdl:message name="EditContactResponse">
+        <wsdl:part element="contact:EditContactResponse" name="EditContactResponse"/>
+    </wsdl:message>
+    <wsdl:message name="DeleteContactRequest">
+        <wsdl:part element="contact:DeleteContactRequest" name="DeleteContactRequest"/>
+    </wsdl:message>
+    <wsdl:message name="DeleteContactResponse">
+        <wsdl:part element="contact:DeleteContactResponse" name="DeleteContactResponse"/>
+    </wsdl:message>
+    <wsdl:message name="GetItemTypesRequest">
+        <wsdl:part element="contact:GetItemTypesRequest" name="GetItemTypesRequest"/>
+    </wsdl:message>
+    <wsdl:message name="GetItemTypesResponse">
+        <wsdl:part element="contact:GetItemTypesResponse" name="GetItemTypesResponse"/>
+    </wsdl:message>
+
+    <wsdl:portType name="ContactManagementService">
+        <wsdl:operation name="createContact">
+            <wsdl:input message="tns:CreateContactRequest" name="CreateContactRequest"/>
+            <wsdl:output message="tns:CreateContactResponse" name="CreateContactResponse"/>
+        </wsdl:operation>
+        <wsdl:operation name="readContact">
+            <wsdl:input message="tns:ReadContactRequest" name="ReadContactRequest"/>
+            <wsdl:output message="tns:ReadContactResponse" name="ReadContactResponse"/>
+        </wsdl:operation>
+        <wsdl:operation name="editContact">
+            <wsdl:input message="tns:EditContactRequest" name="EditContactRequest"/>
+            <wsdl:output message="tns:EditContactResponse" name="EditContactResponse"/>
+        </wsdl:operation>
+        <wsdl:operation name="deleteContact">
+            <wsdl:input message="tns:DeleteContactRequest" name="DeleteContactRequest"/>
+            <wsdl:output message="tns:DeleteContactResponse" name="DeleteContactResponse"/>
+        </wsdl:operation>
+         <wsdl:operation name="getItemTypes">
+            <wsdl:input message="tns:GetItemTypesRequest" name="GetItemTypesRequest"/>
+            <wsdl:output message="tns:GetItemTypesResponse" name="GetItemTypesResponse"/>
+        </wsdl:operation>
+    </wsdl:portType>
+    
+    <wsdl:binding name="ContactManagementServiceBinding" type="tns:ContactManagementService">                  
+        <soap:binding style="document"                                                   
+            transport="http://schemas.xmlsoap.org/soap/http"/>                           
+        <wsdl:operation name="createContact">
+            <soap:operation soapAction="http://filipovic.com/ContactManagementService#createContact"/>          
+            <wsdl:input name="CreateContactRequest">
+                <soap:body use="literal"/>                                             
+            </wsdl:input>
+            <wsdl:output name="CreateContactResponse">
+                <soap:body use="literal"/>                                             
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="readContact">
+            <soap:operation soapAction="http://filipovic.com/ContactManagementService#createContact"/>          
+            <wsdl:input name="ReadContactRequest">
+                <soap:body use="literal"/>                                             
+            </wsdl:input>
+            <wsdl:output name="ReadContactResponse">
+                <soap:body use="literal"/>                                             
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="editContact">
+            <soap:operation soapAction="http://filipovic.com/ContactManagementService#createContact"/>          
+            <wsdl:input name="EditContactRequest">
+                <soap:body use="literal"/>                                             
+            </wsdl:input>
+            <wsdl:output name="EditContactResponse">
+                <soap:body use="literal"/>                                             
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="deleteContact">
+            <soap:operation soapAction="http://filipovic.com/ContactManagementService#createContact"/>          
+            <wsdl:input name="DeleteContactRequest">
+                <soap:body use="literal"/>                                             
+            </wsdl:input>
+            <wsdl:output name="DeleteContactResponse">
+                <soap:body use="literal"/>                                             
+            </wsdl:output>
+        </wsdl:operation>
+        <wsdl:operation name="getItemTypes">
+            <soap:operation soapAction="http://filipovic.com/ContactManagementService#createContact"/>          
+            <wsdl:input name="GetItemTypesRequest">
+                <soap:body use="literal"/>                                             
+            </wsdl:input>
+            <wsdl:output name="GetItemTypesResponse">
+                <soap:body use="literal"/>                                             
+            </wsdl:output>
+        </wsdl:operation>
+    </wsdl:binding>
+    
+    <wsdl:service name="ContactManagementSOAP">
+        <wsdl:port binding="tns:ContactManagementServiceBinding" name="ContactManagementSOAPPort">          
+            <soap:address location="http://localhost:8080/ContactManagement/"/>             
+        </wsdl:port>
+    </wsdl:service>
+</wsdl:definitions>
