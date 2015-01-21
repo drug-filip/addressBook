@@ -29,7 +29,11 @@ public class UserManagementService {
         CreateUserResponse response = new CreateUserResponse();
         DataBase db = null;
         try {
-            if( !createUserRequest.getUsername().isEmpty() && !createUserRequest.getPassword().isEmpty() ){
+            if(createUserRequest==null){
+                response.setErrorCode(3);
+                response.setErrorMessage("Bad request. Request is empty");
+                logger.warn("Bad request. Request is empty");
+            } else if( !createUserRequest.getUsername().isEmpty() && !createUserRequest.getPassword().isEmpty() ){
                 // configuration object
                 GetPropertyValue config = new GetPropertyValue();
                 // database object
@@ -70,7 +74,12 @@ public class UserManagementService {
         DataBase db = null;
 
         try {
-            if( !loginRequest.getUsername().isEmpty() && !loginRequest.getPassword().isEmpty() ){
+            if(loginRequest==null){
+                response.setErrorCode(3);
+                response.setErrorMessage("Bad request. Request is empty");
+                logger.warn("Bad request. Request is empty");
+            }
+            else if( !loginRequest.getUsername().isEmpty() && !loginRequest.getPassword().isEmpty() ){
                 // configuration object
                 GetPropertyValue config = new GetPropertyValue();
                 // database object
@@ -92,7 +101,11 @@ public class UserManagementService {
                 //destroy db
                 db.CloseDB();
                 db = null;
-                
+            }
+            else {
+                response.setErrorCode(3);
+                response.setErrorMessage("Bad request");
+                logger.warn("Bad request.");
             }
         } catch ( SQLException e ) {
             response.setErrorCode(1000);

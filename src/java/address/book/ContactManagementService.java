@@ -31,11 +31,11 @@ public class ContactManagementService {
         CreateContactResponse response = new CreateContactResponse();
         DataBase db = null;
         try {
-            if( createContactRequest.getFirstName().isEmpty() || createContactRequest.getUserId() < 0 ){
+            if( createContactRequest==null ){
                 response.setErrorCode(3);
-                response.setErrorMessage("Bad request. Missing First name or user id.");
-                logger.warn("Bad request. Missing First name or user id.");
-            } else {   
+                response.setErrorMessage("Bad request. Request is null.");
+                logger.warn("Bad request. Request is null.");
+            } else if( !createContactRequest.getFirstName().isEmpty() && createContactRequest.getUserId() > 0 ) {   
 
                     GetPropertyValue config = new GetPropertyValue();
                     // database object
@@ -70,6 +70,10 @@ public class ContactManagementService {
                     db.CloseDB();
                     db=null;
                     response.setErrorCode(0);
+            } else {
+                response.setErrorCode(3);
+                response.setErrorMessage("Bad request");
+                logger.warn("Bad request");
             }
         } catch (IOException ex) {
             response.setErrorCode(1001);
@@ -99,8 +103,17 @@ public class ContactManagementService {
             GetPropertyValue config = new GetPropertyValue();
             // database object
             db = new DataBase( config.getPropValues("database.url"), config.getPropValues("database.username"), config.getPropValues("database.password"));
-            // check if there is contactId in request
-            if( readContactRequest.getContactId() > 0 ){
+            // check if request is not empty
+            if( readContactRequest==null ){
+                Response errorResponse = new Response();
+                errorResponse.setErrorCode(3);
+                errorResponse.setErrorMessage("Bad Request. Request is empty.");
+                response.setError(errorResponse);
+                db=null;
+                logger.warn("Bad Request. Request is empty.");
+            }
+            // get contact data
+            else if( readContactRequest.getContactId() > 0 ){
                 // get contact from db
                 String queryString = "SELECT * FROM contacts WHERE contact_id=" + readContactRequest.getContactId() + " LIMIT 1";
                 ResultSet resultSet = db.execQuery(queryString);
@@ -132,7 +145,7 @@ public class ContactManagementService {
                 resultSet=null;
                 db.CloseDB();
                 db=null;
-               
+            // get data for datagrid
             } else if( readContactRequest.getUserId() > 0 && readContactRequest.getPageNuber() > 0 && readContactRequest.getRecordsPerPage() > 0 ) {
                 int startFrom = readContactRequest.getPageNuber()*readContactRequest.getRecordsPerPage();
                 String queryString = "SELECT DISTINCT\n" +
@@ -163,6 +176,7 @@ public class ContactManagementService {
                         response.getContacts().add(contact);
                     }
                 }
+            // bad reqest
             } else {
                 Response errorResponse = new Response();
                 errorResponse.setErrorCode(3);
@@ -203,9 +217,16 @@ public class ContactManagementService {
             GetPropertyValue config = new GetPropertyValue();
             // database object
             db = new DataBase( config.getPropValues("database.url"), config.getPropValues("database.username"), config.getPropValues("database.password"));
-            
+            // check if request is empty 
+            if(editContactRequest==null){
+                response.setErrorCode(3);
+                response.setErrorMessage("Bad request. Request is empty.");
+                db.CloseDB();
+                db=null;
+                logger.warn("Bad request. Request is empty.");
+            }
             // check if there is contact id
-            if(editContactRequest.getContactId() > 0 ){
+            else if(editContactRequest.getContactId() > 0 ){
                 db.startTransaction();
                 // update contact inforamtion
                 String querString = "UPDATE contacts SET "
@@ -270,8 +291,16 @@ public class ContactManagementService {
             GetPropertyValue config = new GetPropertyValue();
             // database object
             db = new DataBase( config.getPropValues("database.url"), config.getPropValues("database.username"), config.getPropValues("database.password"));
-            
-            if( !deleteContactRequest.getContactId().isEmpty() ){
+            // check if request is null
+            if(deleteContactRequest==null){
+                response.setErrorCode(3);
+                response.setErrorMessage("Bad request. Request is empty");
+                db.CloseDB();
+                db=null;
+                logger.warn("Bad request. Request is empty");
+            }
+            // delete contact
+            else if( !deleteContactRequest.getContactId().isEmpty() ){
                 String queryString ="DELETE FROM contacts WHERE contact_id='" + deleteContactRequest.getContactId() + "'";
                 db.execIUDQuery(queryString);
                 response.setErrorCode(0);
