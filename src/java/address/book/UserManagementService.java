@@ -29,7 +29,7 @@ public class UserManagementService {
         CreateUserResponse response = new CreateUserResponse();
         DataBase db = null;
         try {
-            if(createUserRequest==null){
+            if(createUserRequest==null || createUserRequest.getUsername()==null || createUserRequest.getPassword()==null ){
                 response.setErrorCode(3);
                 response.setErrorMessage("Bad request. Request is empty");
                 logger.warn("Bad request. Request is empty");
@@ -39,7 +39,8 @@ public class UserManagementService {
                 // database object
                 db = new DataBase( config.getPropValues("database.url"), config.getPropValues("database.username"), config.getPropValues("database.password"));
                 // insert query too create new user
-                String queryString = "INSER INTO 'users'('user_id', 'user_name', 'password', 'session_id', ''last_activity) VALUES ('', '" + createUserRequest.getUsername() + "', '" + createUserRequest.getPassword() + "', '', '')";
+                String queryString = "INSERT INTO users( user_name, password) VALUES ('" + createUserRequest.getUsername() + "', '" + createUserRequest.getPassword() + "')";
+                logger.trace("Query string: " + queryString);
                 db.execIUDQuery(queryString);
                 // if there is no error in execute statement set response object
                 response.setErrorCode(0);
@@ -54,14 +55,14 @@ public class UserManagementService {
         } catch ( SQLException e ) {
             response.setErrorCode(1000);
             response.setErrorMessage(e.getMessage());
+            logger.error(e.getMessage());
             db.CloseDB();
             db = null;
-            logger.error(e.getMessage());
         } catch ( IOException e) {
             response.setErrorCode(1001);
             response.setErrorMessage(e.getMessage());
-            db = null;
             logger.error(e.getMessage());
+            db = null;
         } finally {
             logger.exit(response);
             return response;
@@ -74,7 +75,7 @@ public class UserManagementService {
         DataBase db = null;
 
         try {
-            if(loginRequest==null){
+            if(loginRequest==null || loginRequest.getUsername()==null || loginRequest.getPassword()==null ){
                 response.setErrorCode(3);
                 response.setErrorMessage("Bad request. Request is empty");
                 logger.warn("Bad request. Request is empty");
@@ -85,7 +86,7 @@ public class UserManagementService {
                 // database object
                 db = new DataBase( config.getPropValues("database.url"), config.getPropValues("database.username"), config.getPropValues("database.password"));
                 // insert query too create new user
-                String queryString = "SELECT 'user_id' FROM 'users' WHERE 'user_name'='" + loginRequest.getUsername() +"' AND 'password'='" + loginRequest.getPassword() +"'";
+                String queryString = "SELECT user_id FROM users WHERE user_name='" + loginRequest.getUsername() +"' AND password='" + loginRequest.getPassword() +"'";
                 ResultSet resultSet = db.execQuery(queryString);
                 // if there is no error in execute statement set response object
                 if(!resultSet.isBeforeFirst()){
@@ -96,7 +97,7 @@ public class UserManagementService {
                     resultSet.next();
                     response.setErrorCode(0);
                     response.setErrorMessage(resultSet.getString("user_id"));
-                    logger.debug("User '" + resultSet.getString("user_id") + "' is logged in." );
+                    logger.debug("User '" + resultSet.getInt("user_id") + "' is logged in." );
                 }
                 //destroy db
                 db.CloseDB();
