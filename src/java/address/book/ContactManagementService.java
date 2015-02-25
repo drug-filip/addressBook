@@ -31,7 +31,7 @@ public class ContactManagementService {
         CreateContactResponse response = new CreateContactResponse();
         DataBase db = null;
         try {
-            if( createContactRequest==null ){
+            if( createContactRequest==null || createContactRequest.getFirstName()==null ){
                 response.setErrorCode(3);
                 response.setErrorMessage("Bad request. Request is null.");
                 logger.warn("Bad request. Request is null.");
@@ -41,35 +41,41 @@ public class ContactManagementService {
                     // database object
                     db = new DataBase( config.getPropValues("database.url"), config.getPropValues("database.username"), config.getPropValues("database.password"));
                     // Sql query - insert new contact
-                    String queryString = "INSERT INTO 'contacts' ('contact_id', 'user_id', 'first_name', 'last_name', 'city', 'address', 'description') VALUES ('', "
+                    String queryString = "INSERT INTO contacts ( user_id, first_name, last_name, city, address, description) VALUES ("
                             + "'" + createContactRequest.getUserId() + "', "
                             + "'" + createContactRequest.getFirstName() + "', "
                             + "'" + createContactRequest.getLastName()+ "', "
                             + "'" + createContactRequest.getCity() + "', "
                             + "'" + createContactRequest.getAddress() + "', "
-                            + "'" + createContactRequest.getDescription() + "', "
+                            + "'" + createContactRequest.getDescription() + "' "
                             + ")";
+                    logger.trace("Query string: " + queryString);
                     db.execIUDQuery(queryString);
                  
                     if( createContactRequest.getContactItems().size() > 0 ){
+                        logger.debug("Get Contact id created contact.");
                         // get contact id 
-                        queryString = "SELECT 'contact_id' FROM 'contacts' WHERE 'user_id'='" + createContactRequest.getUserId() + "' ORDER BY contact_id DESC LIMIT 1";
+                        queryString = "SELECT contact_id FROM contacts WHERE user_id='" + createContactRequest.getUserId() + "' ORDER BY contact_id DESC LIMIT 1";
+                        logger.trace("Query string: " + queryString);
                         ResultSet resultSet = db.execQuery(queryString);
                         resultSet.next();
                         int contact_id = resultSet.getInt("contact_id");
+                        logger.trace("Contact ID: " + contact_id);
                         // get contact items list
                         List contactItemList = createContactRequest.getContactItems();
                         // put all contact items to db
+                        logger.debug("Inser new contact items into DB");
                         for( int i=0; i < contactItemList.size(); i++  ){
                             ContactItem contactItem = (ContactItem) contactItemList.get(i);
-                            queryString = "INSERT INTO contact_items ('item_id','contact_id', 'item_value', 'description') VALUES ('', '" + contactItem.getContactId() + "', '" + contactItem.getType() + "', '" + contactItem.getItemValue() + "', '" + contactItem.getDescription() + "')";
-                            db.execQuery(queryString);
+                            queryString = "INSERT INTO contact_items (contact_id, type, item_value, description) VALUES ('" + contact_id + "', '" + contactItem.getType() + "', '" + contactItem.getItemValue() + "', '" + contactItem.getDescription() + "')";
+                            logger.trace("Query string: " + queryString);
+                            db.execIUDQuery(queryString);
                         }
                     }
                     db.commitTransaction();
+                    response.setErrorCode(0);
                     db.CloseDB();
                     db=null;
-                    response.setErrorCode(0);
             } else {
                 response.setErrorCode(3);
                 response.setErrorMessage("Bad request");
@@ -78,16 +84,16 @@ public class ContactManagementService {
         } catch (IOException ex) {
             response.setErrorCode(1001);
             response.setErrorMessage( ex.getMessage() );
+            logger.error(ex.getMessage());
             db.CloseDB();
             db=null;
-            logger.error(ex.getMessage());
         } catch (SQLException ex) {
             db.rollbackTransaction();
-            db.CloseDB();
-            db=null;
             response.setErrorCode(1000);
             response.setErrorMessage( ex.getMessage() );
             logger.error(ex.getMessage());
+            db.CloseDB();
+            db=null;
         } finally {
             logger.exit(response);
             return response;
@@ -128,7 +134,7 @@ public class ContactManagementService {
                 contact.setDescription(resultSet.getString("description"));
                 contact.setPicturePath(resultSet.getString("picture_path"));
                 // get contact nubers
-                queryString = "SELECT * FROM contact_item WHERE contact_id='" + resultSet.getInt("contact_id") + "'";
+                queryString = "SELECT * FROM contact_items WHERE contact_id='" + resultSet.getInt("contact_id") + "'";
                 resultSet = db.execQuery(queryString);
                 if( resultSet.isBeforeFirst() ){
                     while( resultSet.next() ){
@@ -147,7 +153,8 @@ public class ContactManagementService {
                 db=null;
             // get data for datagrid
             } else if( readContactRequest.getUserId() > 0 && readContactRequest.getPageNuber() > 0 && readContactRequest.getRecordsPerPage() > 0 ) {
-                int startFrom = readContactRequest.getPageNuber()*readContactRequest.getRecordsPerPage();
+                logger.debug("enter datagrid read mode");
+                int startFrom = (readContactRequest.getPageNuber() - 1) * readContactRequest.getRecordsPerPage();
                 String queryString = "SELECT DISTINCT\n" +
                     "contacts.contact_id AS contact_id,\n" +
                     "contacts.first_name AS first_name,\n" +
@@ -160,12 +167,17 @@ public class ContactManagementService {
                     "FROM contacts\n" +
                     "INNER JOIN contact_items \n" +
                     "ON contacts.contact_id=contact_items.contact_id \n" +
+                    "WHERE user_id='" + readContactRequest.getUserId() + "' " +
                     "LIMIT " + startFrom + "," + readContactRequest.getRecordsPerPage();
+                logger.trace("Query string: " + queryString);
                 ResultSet resultSet = db.execQuery(queryString);
                 if( resultSet.isBeforeFirst() ){
+                    logger.debug("There is contacts in DB. Start iteration over result set.");
                     while( resultSet.next() ){
+                        logger.trace("contact ID: " + resultSet.getInt("contact_id"));
                         Contact contact = new Contact();
                         contact.setContactId(resultSet.getInt("contact_id"));
+                        contact.setUserId(readContactRequest.getUserId());
                         contact.setFirstName(resultSet.getString("first_name"));
                         contact.setLastName(resultSet.getString("last_name"));
                         contact.setCity(resultSet.getString("city"));
@@ -176,14 +188,18 @@ public class ContactManagementService {
                         response.getContacts().add(contact);
                     }
                 }
+                resultSet.close();
+                resultSet=null;
+                db.CloseDB();
+                db=null;
             // bad reqest
             } else {
                 Response errorResponse = new Response();
                 errorResponse.setErrorCode(3);
                 errorResponse.setErrorMessage("Invalid request; User ID or paging data are not set.");
                 response.setError(errorResponse);
-                db=null;
                 logger.warn("Invalid request; User ID or paging data are not set.");
+                db=null;
             }
             
         } catch (IOException ex) {
@@ -191,18 +207,17 @@ public class ContactManagementService {
             errorResponse.setErrorCode(1001);
             errorResponse.setErrorMessage(ex.getMessage());
             response.setError(errorResponse);
+            logger.error(ex.getMessage());
             db.CloseDB();
             db=null;
-            logger.error(ex.getMessage());
-
         } catch (SQLException ex) {
             Response errorResponse = new Response();
             errorResponse.setErrorCode(1001);
             errorResponse.setErrorMessage(ex.getMessage());
             response.setError(errorResponse);
+            logger.error(ex.getMessage());
             db.CloseDB();
             db=null;
-            logger.error(ex.getMessage());
         } finally {
             logger.exit(response);
             return response;
@@ -226,7 +241,7 @@ public class ContactManagementService {
                 logger.warn("Bad request. Request is empty.");
             }
             // check if there is contact id
-            else if(editContactRequest.getContactId() > 0 ){
+            else if(editContactRequest.getContactId() > 0 && editContactRequest.getFirstName() != null ){
                 db.startTransaction();
                 // update contact inforamtion
                 String querString = "UPDATE contacts SET "
@@ -236,21 +251,26 @@ public class ContactManagementService {
                         + "address='" + editContactRequest.getAddress() + "', "
                         + "description='" + editContactRequest.getDescription() + "' "
                         + "WHERE contact_id=" + editContactRequest.getContactId();
+                logger.trace("Query string: " + querString);
                 db.execIUDQuery(querString);
                 // delete contact items saved in db
+                logger.debug("Delete all contac items for given contact_id.");
                 querString = "DELETE FROM contact_items WHERE contact_id=" + editContactRequest.getContactId();
+                logger.trace("Query string: " + querString);
                 db.execIUDQuery(querString);
                 // insert new contat items to db
                 if( editContactRequest.getContactItems().size() > 0 ){
+                    logger.debug("There is contact items in update request to be saved in DB. Start iteration.");
                     List contactItemList = editContactRequest.getContactItems();
                     for( int i=0; i<contactItemList.size(); i++){
                         ContactItem contactItem = (ContactItem) contactItemList.get(i);
-                        querString = "INSER INTO contact_items ('item_id', 'contact_id', 'type', 'item_value', 'description') VALUES ('', "
+                        querString = "INSERT INTO contact_items ( contact_id, type, item_value, description) VALUES ("
                         + "'" + editContactRequest.getContactId() + "' ,"
                         + "'" + contactItem.getType() + "' ,"
                         + "'" + contactItem.getItemValue() + "' ,"
                         + "'" + contactItem.getDescription() + "'"
                         + ")";
+                        logger.trace("Query string: " + querString);
                         db.execIUDQuery(querString);
                     }
                 }
@@ -261,22 +281,22 @@ public class ContactManagementService {
             } else {
                 response.setErrorCode(3);
                 response.setErrorMessage("Ivalid request. Ther is no contact_id in request.");
+                logger.warn("Ivalid request. Ther is no contact_id in request.");
                 db.CloseDB();
                 db=null;
-                logger.warn("Ivalid request. Ther is no contact_id in request.");
             }
         } catch (IOException e) {
             response.setErrorCode(1001);
             response.setErrorMessage(e.getMessage());
-            db = null;
             logger.error(e.getMessage());
+            db = null;
         } catch (SQLException e) {
             response.setErrorCode(1000);
             response.setErrorMessage(e.getMessage());
+            logger.error(e.getMessage());            
             db.rollbackTransaction();
             db.CloseDB();
             db=null;
-            logger.error(e.getMessage());
         }finally {
             logger.exit(response);
             return response;
@@ -292,7 +312,7 @@ public class ContactManagementService {
             // database object
             db = new DataBase( config.getPropValues("database.url"), config.getPropValues("database.username"), config.getPropValues("database.password"));
             // check if request is null
-            if(deleteContactRequest==null){
+            if(deleteContactRequest==null || deleteContactRequest.getContactId()==null){
                 response.setErrorCode(3);
                 response.setErrorMessage("Bad request. Request is empty");
                 db.CloseDB();
@@ -302,6 +322,7 @@ public class ContactManagementService {
             // delete contact
             else if( !deleteContactRequest.getContactId().isEmpty() ){
                 String queryString ="DELETE FROM contacts WHERE contact_id='" + deleteContactRequest.getContactId() + "'";
+                logger.trace("Query string: " + queryString);
                 db.execIUDQuery(queryString);
                 response.setErrorCode(0);
                 db.CloseDB();
@@ -309,21 +330,21 @@ public class ContactManagementService {
             } else {
                 response.setErrorCode(3);
                 response.setErrorMessage("Bad request. Missing Contact ID.");
+                logger.warn("Bad request. Missing Contact ID.");
                 db.CloseDB();
                 db=null;
-                logger.warn("Bad request. Missing Contact ID.");
             }
         } catch (IOException e) {
             response.setErrorCode(1001);
             response.setErrorMessage( e.getMessage() );
-            db=null;
             logger.error(e.getMessage());
+            db=null;
         } catch (SQLException e) {
             response.setErrorCode(1000);
             response.setErrorMessage(e.getMessage());
+            logger.error(e.getMessage());
             db.CloseDB();
             db=null;
-            logger.error(e.getMessage());
         } finally {
             logger.exit(response);
             return response;
@@ -331,7 +352,7 @@ public class ContactManagementService {
     }
 
     public com.filipovic.ws.soap.management.contact.entity.GetItemTypesResponse getItemTypes(java.lang.Object getItemTypesRequest) {
-         logger.entry(getItemTypesRequest);
+        logger.entry(getItemTypesRequest);
         GetItemTypesResponse response = new GetItemTypesResponse();
         DataBase db = null;
         
